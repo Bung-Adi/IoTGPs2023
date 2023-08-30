@@ -1,0 +1,67 @@
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+#define RELAY1 D1
+
+const String ssid = "<Your-Wifi-Name>";
+//const String ssid = "Small Meeting Room_2.4G";
+const String password = "<Your-Wifi-Password>";
+ESP8266WebServer server(80);
+const char DASHBOARD[] PROGMEM = R"=====(
+<html>
+  <head>
+    <title>Website Name</title>
+  </head>
+  <body>
+    <a target="_blank" href="LEDON"> <button>TURN ON</button></a>
+    <a target="_blank" href="LEDOFF"> <button>TURN OFF</button></a>
+  </body>
+</html>
+)=====";
+void indexPage() {
+  String html = DASHBOARD;
+  server.send(200, "text/html", html);
+}
+
+void LEDon() {
+  Serial.println("Status LED : ON");
+  digitalWrite(RELAY1, LOW); // Turn ON the built-in LED
+  server.send(200, "text/html", "ON");
+}
+
+void LEDoff() {
+  Serial.println("Status LED : OFF");
+  digitalWrite(RELAY1, HIGH); // Turn OFF the built-in LED
+  server.send(200, "text/html", "OFF");
+}// ----------------------- FUNCTION -----------------------------
+
+
+void setup() {
+  // put your setup code here, to run once:
+  
+  Serial.begin(115200);
+  pinMode(RELAY1, OUTPUT);
+
+//  connect to wifi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP Address: ");
+  Serial.println(WiFi.localIP());
+  Serial.println("Connected to WiFi");
+  server.on("/", HTTP_GET, indexPage);
+  server.on("/LEDON", HTTP_GET, LEDon);
+  server.on("/LEDOFF", HTTP_GET, LEDoff);
+  server.begin();
+  Serial.println("Server is running...");
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  server.handleClient();
+
+}
